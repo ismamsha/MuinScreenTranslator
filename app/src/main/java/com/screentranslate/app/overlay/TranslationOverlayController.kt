@@ -81,18 +81,23 @@ class TranslationOverlayController(
             typeface = Typeface.create("sans-serif", Typeface.NORMAL)
         }
         val padH = 3f * density
-        return blocks.mapNotNull { tb ->
-            val text = tb.translatedText?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+        val lineHeights = BlockLayoutCalculator.harmonizedLineHeights(
+            blocks.map { it.block.boundingBox.height().toFloat() }, blocks.map { it.block.lineCount },
+        )
+        return blocks.mapIndexedNotNull { i, tb ->
+            val text = tb.translatedText?.takeIf { it.isNotBlank() } ?: return@mapIndexedNotNull null
             val rtl = AppLanguage.isRtlLanguage(tb.targetLanguage)
             val card = !tb.style.sampledReliably
             val bgOpaque = tb.style.backgroundColor
             val bg = ColorAnalyzer.withAlpha(bgOpaque, if (card) minOf(opacity, 0.92f) else opacity)
             val (layout, rect) = calculator.layout(
                 text, tb.block.boundingBox, tb.block.lineCount, rtl, fontMode, paint,
-                tb.style.textColor, screenWidth, screenHeight,
+                tb.style.textColor, screenWidth, screenHeight, lineHeights[i],
             )
             val textLeft = if (rtl) rect.right - padH - layout.width else rect.left + padH
-            val textTop = rect.top + (rect.height() - layout.height) / 2f
+            // Top-aligned: translations are often shorter than the original paragraph.
+            val textTop = if (tb.block.lineCount > 1) rect.top + 1.5f * density + 2f * density
+            else rect.top + (rect.height() - layout.height) / 2f
             RenderBlock(RectF(rect), layout, textLeft, textTop, bg, card)
         }
     }

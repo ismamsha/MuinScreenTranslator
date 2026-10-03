@@ -34,14 +34,19 @@ class HybridOcrEngine(
                 .onFailure { Logx.w("Tesseract OCR failed", it) }.getOrDefault(emptyList())
             val blocks = TextBlockGrouper.group(OcrMerger.merge(emptyList(), tessLines)).map { it.toOcrBlock() }
             Logx.d("OCR (Tesseract only, ML Kit avg ${mlKitAvgMs}ms): tess=${tessLines.size} blocks=${blocks.size} in ${System.currentTimeMillis() - start}ms")
-            return blocks
+            // Nothing found (e.g. text in the target language's script, which Tesseract isn't
+            // loaded for): let ML Kit have a look too.
+            if (blocks.isNotEmpty()) return blocks
         }
 
         val mlLines = runCatching { mlKit.recognizeLines(bitmap) }
             .onFailure { Logx.w("ML Kit OCR failed", it) }.getOrDefault(emptyList())
         val mlTime = System.currentTimeMillis() - start
-        mlKitAvgMs = if (mlKitAvgMs == 0L) mlTime else (mlKitAvgMs * 2 + mlTime) / 3
-        prefs.edit().putLong(KEY_ML_AVG, mlKitAvgMs).apply()
+        // The first call after the app starts includes loading the model, so it doesn't count.
+        if (taps > 1) {
+            mlKitAvgMs = if (mlKitAvgMs == 0L) mlTime else (mlKitAvgMs * 2 + mlTime) / 3
+            prefs.edit().putLong(KEY_ML_AVG, mlKitAvgMs).apply()
+        }
 
         var tessLines = emptyList<OcrLine>()
         if (langs.isNotEmpty()) {
@@ -63,8 +68,8 @@ class HybridOcrEngine(
     }
 
     companion object {
-        private const val KEY_ML_AVG = "mlkit_avg_ms"
-        private const val SLOW_ML_KIT_MS = 2500L
+        private const val KEY_ML_AVG = "mlkit_warm_avg_ms"
+        private const val SLOW_ML_KIT_MS = 3000L
 
         /** ML Kit blocks that probably aren't really Latin text, padded a little. */
         fun uncertainRegions(lines: List<OcrLine>, width: Int, height: Int): List<Box> =
