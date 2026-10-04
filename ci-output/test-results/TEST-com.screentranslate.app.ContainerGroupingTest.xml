@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.screentranslate.app.ContainerGroupingTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-10-04T10:12:07.662Z" hostname="runnervm8df0l" time="0.086">
+  <properties/>
+  <testcase name="bigWhiteBubbleOnLightWallpaper" classname="com.screentranslate.app.ContainerGroupingTest" time="0.064"/>
+  <testcase name="sentencesInsideOneBubbleAreOneParagraph" classname="com.screentranslate.app.ContainerGroupingTest" time="0.008"/>
+  <testcase name="plainPageSentencesAreSeparate" classname="com.screentranslate.app.ContainerGroupingTest" time="0.006"/>
+  <testcase name="colouredCardIsABox" classname="com.screentranslate.app.ContainerGroupingTest" time="0.005"/>
+  <testcase name="twoBubblesStaySeparate" classname="com.screentranslate.app.ContainerGroupingTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
